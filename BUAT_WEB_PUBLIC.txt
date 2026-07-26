@@ -1,0 +1,33 @@
+Membuat Speed Test Ini Jadi Web
+
+1. Untuk komputer lain di rumah/kantor
+- Ini cukup pakai LAN.
+- Jalankan BUKA_SPEEDTEST.bat di komputer server.
+- Buka alamat LAN yang muncul di halaman, contoh:
+  http://192.168.1.4:9090/
+- Komputer lain harus satu Wi-Fi/router.
+
+2. Untuk web public dengan domain
+- Butuh VPS/server hosting yang menjalankan Node.js.
+- Upload folder ini ke VPS.
+- Jalankan:
+  npm install
+  node speedtest-server.js
+- Buka firewall VPS untuk port 9090, atau pasang Nginx/Caddy reverse proxy ke domain HTTPS.
+- Hosting statis saja seperti upload HTML biasa tidak cukup untuk semua fitur, karena speed test butuh endpoint backend untuk upload, download, public IP, dan DNS resolve.
+
+Contoh arsitektur:
+User browser -> domain HTTPS -> VPS Node.js speedtest-server.js
+
+Catatan penting:
+- Kalau di-host di VPS, test utama mengukur koneksi user ke VPS/server web itu.
+- Hasil bisa beda dari Fast/Ookla karena server, CDN, routing ISP, dan lokasi berbeda.
+- Untuk speed test public yang benar-benar kuat, server web harus punya bandwidth besar, lokasi dekat user, dan HTTPS.
+- Kalau hanya mau dipakai sendiri/keluarga di jaringan rumah, LAN lebih mudah dan tidak perlu domain.
+- Mode Cloudflare upload pada versi lokal memakai proxy backend. Kalau app ini dibuat public untuk banyak user, upload sebaiknya diukur ke server/domain sendiri atau memakai M-Lab NDT7 agar bukan upload VPS ke Cloudflare.
+- Region checker memakai TCP probe dari server yang menjalankan Node.js. Kalau di-host di VPS, region checker mengukur rute VPS, bukan rute komputer user.
+
+Pilihan paling praktis:
+- Pakai LAN untuk rumah/kantor.
+- Pakai VPS + domain kalau ingin bisa dibuka dari mana saja.
+- Pakai mode M-Lab NDT7 untuk pembanding lintas jaringan tanpa perlu punya server speedtest besar.

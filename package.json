@@ -1,0 +1,12 @@
+{
+  "name": "speedtest-gaming-analyzer",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node speedtest-server.js",
+    "speedtest": "node speedtest-server.js"
+  },
+  "dependencies": {
+    "@m-lab/ndt7": "^0.1.4"
+  }
+}

@@ -1,0 +1,21 @@
+Akses Speed Test dari komputer lain
+
+Syarat:
+1. Komputer server ini harus tetap menyala.
+2. BUKA_SPEEDTEST.bat atau server Node.js harus sedang berjalan.
+3. Komputer lain harus berada di jaringan yang sama, misalnya Wi-Fi/router yang sama.
+
+Jangan pakai ini di komputer lain:
+http://localhost:9090/
+
+Pakai salah satu alamat LAN komputer server ini:
+http://192.168.1.4:9090/
+http://192.168.100.2:9090/
+
+Catatan:
+- localhost selalu menunjuk ke komputer yang sedang dipakai.
+- Kalau dibuka dari komputer lain, pakai IP komputer server.
+- Kalau alamat LAN tidak bisa dibuka, biasanya Windows Firewall memblokir Node.js atau port 9090.
+- Jika IP komputer berubah setelah restart/router ganti koneksi, cek lagi IP dengan perintah ipconfig.
+- Untuk download/latency dari komputer lain, mode Cloudflare utama masih berguna karena berjalan dari browser komputer itu.
+- Untuk upload komputer lain yang lebih akurat, gunakan engine M-Lab NDT7 only atau Compare. Mode Cloudflare utama memakai server lokal sebagai proxy upload, jadi upload bisa mengikuti komputer server.

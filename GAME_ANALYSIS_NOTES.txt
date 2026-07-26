@@ -1,0 +1,42 @@
+Catatan Analisa Game
+
+War Thunder dan game online lain:
+- Saat main online, download Mbps besar tidak otomatis membuat ping lebih rendah.
+- Yang paling terasa saat main adalah latency, jitter, dan packet loss.
+- Download speed lebih berpengaruh untuk update, install, preload, dan patch.
+
+Panduan kasar:
+- Latency <= 35 ms: sangat bagus untuk competitive.
+- Latency 35-65 ms: nyaman untuk mayoritas game online.
+- Latency 65-100 ms: masih bisa, tapi mulai terasa delay.
+- Latency > 100 ms: kurang ideal untuk competitive.
+- Jitter <= 8 ms: stabil.
+- Jitter 8-15 ms: masih layak.
+- Jitter > 20 ms: rawan stutter/teleport.
+- Packet loss 0%: ideal.
+- Packet loss > 1%: bisa terasa lag spike.
+- Packet loss > 2%: biasanya tidak nyaman untuk game online.
+
+Ukuran game:
+- Ukuran di app adalah estimasi dan bisa berubah karena update Steam.
+- Gunakan input "Ukuran game / update" untuk menyesuaikan ukuran War Thunder atau game lain.
+
+War Thunder region checker:
+- WT SA / South Asia, NA / US, EU, dan CIS dicek memakai endpoint publik region sebagai aproksimasi.
+- Ini bukan IP server resmi Gaijin, karena server game asli bisa berubah dan tidak selalu dipublikasikan.
+- Untuk Indonesia/Asia Tenggara, SA/South Asia biasanya lebih dekat dibanding EU/US/CIS.
+- Pilih region dengan latency rata-rata paling kecil, jitter kecil, dan loss 0%.
+- Kalau SA tidak muncul di launcher atau tidak bisa dipilih, gunakan Auto dan bandingkan hasil ping di dalam game.
+
+Game lain yang ditambahkan:
+- Mobile Legends: Indonesia, SEA, Philippines, NA, EU approximation.
+- Project Sekai: JP, KR, TW/HK, SEA, Global approximation.
+- Arena Breakout Mobile/Infinite: APAC, NA, EU, South America, Oceania approximation.
+- Call of Duty Mobile/Warzone: SEA, Japan, US, EU, Oceania approximation.
+- Delta Force: Indonesia, Singapore, Japan, Middle East, US East/West, Europe, South America, Oceania approximation.
+- PUBG PC/PUBG Mobile: SEA, Indonesia, KR/JP, India, Middle East, EU, NA, Oceania approximation.
+
+Catatan server game:
+- IP server asli game biasanya tidak dipublikasikan, berubah, atau dilindungi CDN/anti-DDoS.
+- Region checker ini bukan pengganti ping in-game, tapi membantu memilih server/region sebelum main.
+- Jika hasil checker bagus tapi in-game ping jelek, server game asli kemungkinan berbeda dari endpoint aproksimasi.
