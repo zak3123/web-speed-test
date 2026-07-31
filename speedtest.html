@@ -3,16 +3,16 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Accurate Speed Test</title>
+  <title>Speed Test Demo</title>
   <link rel="stylesheet" href="speedtest.css" />
 </head>
 <body>
   <main class="app">
     <header class="hero">
       <div>
-        <p class="eyebrow">verified network measurement</p>
-        <h1>Speed Test</h1>
-        <p class="subtitle">Mode utama memakai Cloudflare multi-stream untuk estimasi speed internet, Steam, game download, dan cloud gaming. M-Lab tetap tersedia sebagai pembanding routing.</p>
+        <p class="eyebrow">network performance analyzer</p>
+        <h1>Speed Test Demo</h1>
+        <p class="subtitle">Ukur download, upload, latency, jitter, region game, dan estimasi Steam/CDN dalam satu dashboard cepat.</p>
       </div>
       <section class="control-panel">
         <div class="status-line">
@@ -48,11 +48,33 @@
           <option value="1073741824">1 GB upload akurat</option>
         </select>
         <div class="actions">
-          <button class="primary" id="startBtn" type="button">Start</button>
+          <button class="primary" id="startBtn" type="button">GO</button>
           <button class="secondary" id="stopBtn" type="button" disabled>Stop</button>
         </div>
       </section>
     </header>
+
+    <section class="connection-strip" aria-label="Koneksi dan server uji">
+      <article class="endpoint-card client-endpoint">
+        <span class="endpoint-role">ISP / Client</span>
+        <strong id="heroClientIsp">Mendeteksi ISP</strong>
+        <small id="heroClientIp">-</small>
+        <small id="heroClientLocation">-</small>
+        <em id="heroClientAsn">ASN -</em>
+      </article>
+      <div class="route-line" aria-hidden="true">
+        <span></span>
+        <b>TEST ROUTE</b>
+        <span></span>
+      </div>
+      <article class="endpoint-card server-endpoint">
+        <span class="endpoint-role">Server uji</span>
+        <strong id="heroServerName">Cloudflare speed edge</strong>
+        <small id="heroServerLocation">Global CDN / nearest edge</small>
+        <small id="heroServerIp">-</small>
+        <em id="heroServerMode">Cloudflare multi-stream utama</em>
+      </article>
+    </section>
 
     <section class="stage">
       <section class="gauge-card">
@@ -288,7 +310,7 @@
         </div>
         <dl class="info-list">
           <div><dt>Client IP</dt><dd id="clientIp">-</dd></div>
-          <div><dt>LAN URL</dt><dd id="lanUrl">-</dd></div>
+          <div><dt>Access URL</dt><dd id="lanUrl">-</dd></div>
           <div><dt>Selected server</dt><dd id="selectedServer">-</dd></div>
           <div><dt>Server IP</dt><dd id="serverIp">-</dd></div>
           <div><dt>Mode</dt><dd id="modeLabel">Cloudflare multi-stream utama</dd></div>

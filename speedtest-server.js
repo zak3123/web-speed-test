@@ -17,8 +17,10 @@ const MAX_URL_LENGTH = 2048;
 const MAX_CONCURRENT_UPLOAD_STREAMS = Math.max(1, Math.min(24, Number(process.env.SPEEDTEST_MAX_UPLOAD_STREAMS) || 12));
 const INTERNET_UPLOAD_TARGET = "https://speed.cloudflare.com/__up";
 const CLOUDFLARE_TRACE = "https://speed.cloudflare.com/cdn-cgi/trace";
+const IP_PROFILE_API = "https://ipwho.is";
 const rateBuckets = new Map();
 const activeUploadStreams = new Map();
+const profileCache = new Map();
 const REGION_TARGETS = [
   {
     id: "wt-sa",
@@ -763,6 +765,8 @@ function normalizeIp(value = "") {
 }
 
 function clientIp(req) {
+  const real = req.headers["x-real-ip"];
+  if (real) return normalizeIp(String(real).trim());
   const forwarded = req.headers["x-forwarded-for"];
   if (forwarded) return normalizeIp(String(forwarded).split(",")[0].trim());
   return normalizeIp(req.socket.remoteAddress || "");
@@ -779,6 +783,59 @@ function isPrivateIp(ip) {
     if (parts[0] === 169 && parts[1] === 254) return true;
   }
   return value === "::1";
+}
+
+function cleanProfileText(value, fallback = "-") {
+  const text = String(value || "").replace(/\s+/g, " ").trim();
+  return text ? text.slice(0, 160) : fallback;
+}
+
+async function fetchClientProfile(ip) {
+  const fallback = {
+    ok: true,
+    ip,
+    isp: "ISP tidak tersedia",
+    org: "-",
+    asn: "-",
+    city: "-",
+    region: "-",
+    country: "-",
+    location: "-",
+    source: "request"
+  };
+  if (!ip || isPrivateIp(ip)) return fallback;
+
+  const cached = profileCache.get(ip);
+  if (cached && cached.expiresAt > Date.now()) return cached.value;
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 2500);
+  try {
+    const response = await fetch(`${IP_PROFILE_API}/${encodeURIComponent(ip)}`, {
+      cache: "no-store",
+      signal: controller.signal
+    });
+    const body = await response.json();
+    if (!response.ok || body.success === false) throw new Error(body.message || `HTTP ${response.status}`);
+    const profile = {
+      ok: true,
+      ip,
+      isp: cleanProfileText(body.connection?.isp, fallback.isp),
+      org: cleanProfileText(body.connection?.org),
+      asn: body.connection?.asn ? `AS${body.connection.asn}` : "-",
+      city: cleanProfileText(body.city),
+      region: cleanProfileText(body.region),
+      country: cleanProfileText(body.country),
+      location: [body.city, body.region, body.country].map((item) => cleanProfileText(item, "")).filter(Boolean).join(", ") || "-",
+      source: "ipwho.is"
+    };
+    profileCache.set(ip, { value: profile, expiresAt: Date.now() + 6 * 60 * 60 * 1000 });
+    return profile;
+  } catch {
+    return fallback;
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 function isAllowedClient(req) {
@@ -837,6 +894,14 @@ function handleInfo(req, res) {
     uptimeSeconds: Math.round(process.uptime()),
     now: new Date().toISOString()
   });
+}
+
+async function handleClientProfile(req, res) {
+  if (!rateLimit(req, "client-profile", 60, 60 * 1000)) {
+    return sendJson(res, 429, { ok: false, error: "Terlalu banyak request profil client dari IP ini" });
+  }
+  const profile = await fetchClientProfile(clientIp(req));
+  return sendJson(res, 200, profile);
 }
 
 function handlePing(req, res, url) {
@@ -1224,6 +1289,7 @@ const server = http.createServer((req, res) => {
   }
 
   if (url.pathname === "/api/info" && req.method === "GET") return handleInfo(req, res);
+  if (url.pathname === "/api/client-profile" && req.method === "GET") return handleClientProfile(req, res);
   if (url.pathname === "/api/ping" && req.method === "GET") return handlePing(req, res, url);
   if (url.pathname === "/api/region-targets" && req.method === "GET") return handleRegionTargets(req, res);
   if (url.pathname === "/api/region-probe" && req.method === "GET") return handleRegionProbe(req, res, url);

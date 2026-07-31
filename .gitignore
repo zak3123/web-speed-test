@@ -4,3 +4,5 @@ npm-debug.log*
 .env
 .DS_Store
 Thumbs.db
+speed-test-demo.tar.gz
+tools/

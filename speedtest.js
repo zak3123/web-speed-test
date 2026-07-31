@@ -80,6 +80,23 @@ function setText(id, value) {
   if (el) el.textContent = value;
 }
 
+function setServerEndpoint(name, location = "-", ip = "-") {
+  setText("heroServerName", name || "-");
+  setText("heroServerLocation", location || "-");
+  setText("heroServerIp", ip || "-");
+}
+
+function defaultServerEndpoint() {
+  const endpoints = {
+    cloudflare: ["Cloudflare speed edge", "Global CDN / nearest edge"],
+    verified: ["Cloudflare + M-Lab", "Perbandingan multi server"],
+    ndt7: ["M-Lab NDT7", "Server otomatis terdekat"],
+    local: [window.location.host, "Speed Test Demo VPS"]
+  };
+  const [name, location] = endpoints[mode()] || endpoints.cloudflare;
+  setServerEndpoint(name, location, "-");
+}
+
 function log(message) {
   const time = new Date().toLocaleTimeString("id-ID", { hour12: false });
   $("eventLog").innerHTML = `<div>[${time}] ${escapeHtml(message)}</div>${$("eventLog").innerHTML}`;
@@ -437,19 +454,18 @@ function renderRegionRows(rows) {
     $("regionRows").innerHTML = `<tr><td colspan="6">Tidak ada hasil region.</td></tr>`;
     return;
   }
-  $("regionRows").innerHTML = rows
-    .slice()
-    .sort((a, b) => regionScore(a) - regionScore(b))
+  const sorted = rows.slice().sort((a, b) => regionScore(a) - regionScore(b));
+  $("regionRows").innerHTML = sorted
     .map((row) => {
       const verdict = routeVerdict(row);
       return `
         <tr>
-          <td><strong>${escapeHtml(row.label)}</strong><br><small>${escapeHtml(row.note || "")}</small></td>
-          <td>${escapeHtml(row.region || "-")}<br><small>${escapeHtml(row.bestHost || "-")}</small></td>
-          <td>${fmt(row.avgMs, 1)} ms<br><small>best ${fmt(row.bestMs, 1)} ms</small></td>
-          <td>${fmt(row.jitterMs, 1)} ms</td>
-          <td>${Number.isFinite(row.loss) ? fmt(row.loss, 1) : "-"}%</td>
-          <td><strong>${escapeHtml(verdict.label)}</strong><br><small>${escapeHtml(verdict.hint)}</small></td>
+          <td data-label="Target"><strong>${escapeHtml(row.label)}</strong><br><small>${escapeHtml(row.note || "")}</small></td>
+          <td data-label="Region">${escapeHtml(row.region || "-")}<br><small>${escapeHtml(row.bestHost || "-")}</small></td>
+          <td data-label="Latency">${fmt(row.avgMs, 1)} ms<br><small>best ${fmt(row.bestMs, 1)} ms</small></td>
+          <td data-label="Jitter">${fmt(row.jitterMs, 1)} ms</td>
+          <td data-label="Loss">${Number.isFinite(row.loss) ? fmt(row.loss, 1) : "-"}%</td>
+          <td data-label="Verdict"><strong>${escapeHtml(verdict.label)}</strong><br><small>${escapeHtml(verdict.hint)}</small></td>
         </tr>
       `;
     }).join("");
@@ -507,7 +523,9 @@ function setLiveMbps(value) {
 
 function pushChart(value, phase, engine) {
   if (!Number.isFinite(value) || value < 0) return;
-  state.chart.push({ value, phase, engine });
+  const previous = [...state.chart].reverse().find((item) => item.phase === phase && item.engine === engine);
+  const smoothed = previous ? previous.value * 0.72 + value * 0.28 : value;
+  state.chart.push({ value: smoothed, phase, engine });
   if (state.chart.length > 180) state.chart.shift();
   drawChart();
 }
@@ -571,6 +589,15 @@ async function publicTrace() {
   }
 }
 
+async function clientProfile() {
+  try {
+    const response = await fetch(localApi(`/api/client-profile?t=${Date.now()}`), { cache: "no-store" });
+    const body = await response.json();
+    if (response.ok && body?.ok) return body;
+  } catch {}
+  return {};
+}
+
 async function resolveHost(host) {
   try {
     const response = await fetch(localApi(`/api/resolve?host=${encodeURIComponent(host)}&t=${Date.now()}`));
@@ -582,8 +609,14 @@ async function resolveHost(host) {
 }
 
 async function initInfo() {
-  const [trace, info] = await Promise.all([publicTrace(), localInfo()]);
-  setText("clientIp", trace.ip || "-");
+  const [profile, trace, info] = await Promise.all([clientProfile(), publicTrace(), localInfo()]);
+  const ip = profile.ip || trace.ip || info.clientIp || "-";
+  const isp = profile.isp || profile.org || "ISP tidak tersedia";
+  setText("heroClientIsp", isp);
+  setText("heroClientIp", ip);
+  setText("heroClientLocation", profile.location || trace.loc || "-");
+  setText("heroClientAsn", profile.asn && profile.asn !== "-" ? profile.asn : "ASN -");
+  setText("clientIp", ip);
   setText("lanUrl", lanUrls(info));
   updateModeLabel();
 }
@@ -598,6 +631,9 @@ async function localInfo() {
 }
 
 function lanUrls(info) {
+  if (info?.protocol === "https" || !location.hostname.match(/^(localhost|127\.|10\.|172\.(1[6-9]|2\d|3[0-1])\.|192\.168\.)/)) {
+    return `${location.origin}/`;
+  }
   const port = window.location.port || "9090";
   const addresses = Array.isArray(info?.serverIps) ? info.serverIps.map((item) => item.address) : [];
   const urls = addresses
@@ -613,7 +649,10 @@ function updateModeLabel() {
     ndt7: "M-Lab NDT7 only",
     local: "Local server diagnostic"
   };
-  setText("modeLabel", labels[mode()] || mode());
+  const label = labels[mode()] || mode();
+  setText("modeLabel", label);
+  setText("heroServerMode", label);
+  if (!state.running) defaultServerEndpoint();
 }
 
 async function startTest() {
@@ -781,11 +820,13 @@ async function runNdt7(runId, signal) {
       if (runId !== state.runId) return;
       result.server = ndtServerHost(choice);
       setText("selectedServer", result.server);
+      setServerEndpoint(result.server, "M-Lab nearest server", "resolving...");
       log(`M-Lab server: ${result.server}`);
       resolveHost(result.server).then((addresses) => {
         if (runId !== state.runId) return;
         result.serverIp = addresses.join(", ");
         setText("serverIp", result.serverIp || "-");
+        setServerEndpoint(result.server, "M-Lab nearest server", result.serverIp || "-");
       });
     },
     downloadStart: () => {
@@ -886,15 +927,17 @@ async function runCloudflare(runId, signal) {
     serverIp: ""
   };
   setText("selectedServer", result.server);
+  setServerEndpoint(result.server, "Cloudflare global CDN", "resolving...");
   const addresses = await resolveHost(result.server);
   result.serverIp = addresses.join(", ");
   setText("serverIp", result.serverIp || "-");
+  setServerEndpoint(result.server, "Cloudflare global CDN", result.serverIp || "-");
 
   const lat = await runHttpLatency(`${CF_BASE}/cdn-cgi/trace`, signal);
   Object.assign(result, lat);
   setPhase("Cloudflare download");
   log("Cloudflare download dimulai");
-  result.download = await runHttpDownload(`${CF_BASE}/__down`, "Cloudflare", signal);
+  result.download = await runCloudflareDownload(signal, result);
   setPhase("Cloudflare upload");
   log("Cloudflare upload dimulai");
   result.upload = await runCloudflareUploadProxy(signal);
@@ -902,6 +945,20 @@ async function runCloudflare(runId, signal) {
   state.engineResults.push(result);
   renderEngineRows(state.engineResults);
   return result;
+}
+
+async function runCloudflareDownload(signal, result) {
+  try {
+    return await runHttpDownload(`${CF_BASE}/__down`, "Cloudflare", signal);
+  } catch (error) {
+    if (signal.aborted) throw error;
+    result.server = "VPS download fallback";
+    setText("selectedServer", result.server);
+    setText("serverIp", "-");
+    setServerEndpoint("Speed Test Demo VPS", window.location.host, "-");
+    log(`Cloudflare direct gagal, fallback ke VPS: ${error.message}`);
+    return runHttpDownload(localApi("/api/download"), "VPS", signal);
+  }
 }
 
 async function runLocal(runId, signal) {
@@ -917,6 +974,7 @@ async function runLocal(runId, signal) {
   };
   setText("selectedServer", result.server);
   setText("serverIp", result.serverIp);
+  setServerEndpoint(result.server, "Speed Test Demo VPS", result.serverIp);
   const lat = await runHttpLatency(localApi("/api/ping"), signal);
   Object.assign(result, lat);
   setPhase("Local download");
@@ -1111,12 +1169,10 @@ function sleep(ms, signal) {
 
 function drawGauge(value) {
   const canvas = $("gaugeCanvas");
-  const ctx = canvas.getContext("2d");
-  const w = canvas.width;
-  const h = canvas.height;
+  const { ctx, w, h } = fitCanvas(canvas);
   const cx = w / 2;
   const cy = h / 2;
-  const radius = 142;
+  const radius = Math.min(w, h) * .39;
   const start = Math.PI * .78;
   const end = Math.PI * 2.22;
   const max = gaugeMax(value);
@@ -1124,20 +1180,49 @@ function drawGauge(value) {
 
   ctx.clearRect(0, 0, w, h);
   ctx.lineCap = "round";
-  ctx.lineWidth = 22;
-  ctx.strokeStyle = "#dce7f2";
+  ctx.lineWidth = Math.max(18, radius * .14);
+  ctx.strokeStyle = "#202938";
   ctx.beginPath();
   ctx.arc(cx, cy, radius, start, end);
   ctx.stroke();
 
-  const grad = ctx.createLinearGradient(70, 70, 290, 290);
-  grad.addColorStop(0, "#15956b");
-  grad.addColorStop(.5, "#1769e0");
-  grad.addColorStop(1, "#b97900");
+  ctx.save();
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = "rgba(244, 248, 251, .28)";
+  for (let i = 0; i <= 20; i += 1) {
+    const a = start + ((end - start) * i / 20);
+    const inner = radius - (i % 5 === 0 ? 20 : 12);
+    const outer = radius - 4;
+    ctx.beginPath();
+    ctx.moveTo(cx + Math.cos(a) * inner, cy + Math.sin(a) * inner);
+    ctx.lineTo(cx + Math.cos(a) * outer, cy + Math.sin(a) * outer);
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  const grad = ctx.createLinearGradient(cx - radius, cy, cx + radius, cy);
+  grad.addColorStop(0, "#35d07f");
+  grad.addColorStop(.52, "#00c2ff");
+  grad.addColorStop(1, "#8b5cf6");
   ctx.strokeStyle = grad;
+  ctx.shadowColor = "rgba(0, 194, 255, .55)";
+  ctx.shadowBlur = 18;
   ctx.beginPath();
   ctx.arc(cx, cy, radius, start, start + (end - start) * pct);
   ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  const pointer = start + (end - start) * pct;
+  ctx.fillStyle = "#f4f8fb";
+  ctx.beginPath();
+  ctx.arc(cx + Math.cos(pointer) * radius, cy + Math.sin(pointer) * radius, 5, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = "rgba(244, 248, 251, .56)";
+  ctx.font = "700 12px Segoe UI";
+  ctx.textAlign = "center";
+  ctx.fillText(`0`, cx - radius * .72, cy + radius * .82);
+  ctx.fillText(`${max}`, cx + radius * .72, cy + radius * .82);
 }
 
 function gaugeMax(value) {
@@ -1151,52 +1236,129 @@ function gaugeMax(value) {
 
 function drawChart() {
   const canvas = $("chartCanvas");
-  const ctx = canvas.getContext("2d");
-  const w = canvas.width;
-  const h = canvas.height;
+  const { ctx, w, h } = fitCanvas(canvas);
+  const plot = { left: 56, top: 32, right: 18, bottom: 34 };
+  plot.bottomY = h - plot.bottom;
+  const plotW = w - plot.left - plot.right;
+  const plotH = plot.bottomY - plot.top;
   ctx.clearRect(0, 0, w, h);
-  ctx.fillStyle = "#f8fbff";
+  ctx.fillStyle = "#080c12";
   ctx.fillRect(0, 0, w, h);
-  ctx.strokeStyle = "#d9e3ee";
+
+  ctx.strokeStyle = "#1e2735";
   ctx.lineWidth = 1;
-  for (let i = 1; i < 5; i += 1) {
-    const y = h * i / 5;
+  for (let i = 0; i <= 5; i += 1) {
+    const y = plot.top + (plotH * i / 5);
     ctx.beginPath();
-    ctx.moveTo(0, y);
-    ctx.lineTo(w, y);
+    ctx.moveTo(plot.left, y);
+    ctx.lineTo(w - plot.right, y);
     ctx.stroke();
   }
+  for (let i = 0; i <= 6; i += 1) {
+    const x = plot.left + (plotW * i / 6);
+    ctx.beginPath();
+    ctx.moveTo(x, plot.top);
+    ctx.lineTo(x, h - plot.bottom);
+    ctx.stroke();
+  }
+
   if (!state.chart.length) {
-    ctx.fillStyle = "#687789";
-    ctx.font = "16px Segoe UI";
-    ctx.fillText("Belum ada data", 22, 42);
+    ctx.fillStyle = "#8995a8";
+    ctx.font = "700 16px Segoe UI";
+    ctx.textAlign = "center";
+    ctx.fillText("Tekan GO untuk melihat throughput realtime", w / 2, h / 2);
     return;
   }
+
   const max = Math.max(10, ...state.chart.map((item) => item.value)) * 1.15;
-  const step = w / Math.max(1, state.chart.length - 1);
-  drawSeries(ctx, "download", "#1769e0", max, step, h);
-  drawSeries(ctx, "upload", "#15956b", max, step, h);
-  ctx.fillStyle = "#687789";
-  ctx.font = "13px Segoe UI";
-  ctx.fillText(`Max ${fmt(max / 1.15, 1)} Mbps`, 18, 22);
+  const step = plotW / Math.max(1, state.chart.length - 1);
+  drawSeries(ctx, "download", "#00c2ff", "rgba(0, 194, 255, .16)", max, step, plot);
+  drawSeries(ctx, "upload", "#35d07f", "rgba(53, 208, 127, .13)", max, step, plot);
+
+  ctx.fillStyle = "#8995a8";
+  ctx.font = "700 12px Segoe UI";
+  ctx.textAlign = "left";
+  ctx.fillText(`${fmt(max / 1.15, 1)} Mbps`, 10, plot.top + 4);
+  ctx.fillText("0", 36, h - plot.bottom + 4);
+
+  ctx.fillStyle = "#00c2ff";
+  ctx.fillRect(w - 178, 16, 10, 10);
+  ctx.fillStyle = "#cbd5e1";
+  ctx.fillText("Download", w - 162, 25);
+  ctx.fillStyle = "#35d07f";
+  ctx.fillRect(w - 86, 16, 10, 10);
+  ctx.fillStyle = "#cbd5e1";
+  ctx.fillText("Upload", w - 70, 25);
 }
 
-function drawSeries(ctx, phase, color, max, step, h) {
+function drawSeries(ctx, phase, color, fill, max, step, plot) {
   const points = state.chart
-    .map((item, index) => ({ ...item, chartIndex: index, x: index * step }))
+    .map((item, index) => ({ ...item, chartIndex: index, x: plot.left + index * step }))
     .filter((item) => item.phase === phase);
   if (!points.length) return;
-  ctx.strokeStyle = color;
-  ctx.lineWidth = 3;
-  ctx.beginPath();
+  let segment = [];
+  const flush = () => {
+    if (!segment.length) return;
+    drawChartSegment(ctx, segment, color, fill, max, plot);
+    segment = [];
+  };
   points.forEach((point, index) => {
     const prev = points[index - 1];
-    const y = h - (point.value / max) * (h - 28) - 14;
     const shouldBreak = !prev || prev.engine !== point.engine || point.chartIndex - prev.chartIndex > 1;
-    if (shouldBreak) ctx.moveTo(point.x, y);
-    else ctx.lineTo(point.x, y);
+    if (shouldBreak) flush();
+    segment.push(point);
+  });
+  flush();
+}
+
+function drawChartSegment(ctx, points, color, fill, max, plot) {
+  const y = (value) => plot.bottomY - (value / max) * (plot.bottomY - plot.top);
+  ctx.beginPath();
+  points.forEach((point, index) => {
+    const py = y(point.value);
+    if (index === 0) ctx.moveTo(point.x, py);
+    else ctx.lineTo(point.x, py);
+  });
+  if (points.length > 1) {
+    ctx.lineTo(points[points.length - 1].x, plot.bottomY);
+    ctx.lineTo(points[0].x, plot.bottomY);
+    ctx.closePath();
+    ctx.fillStyle = fill;
+    ctx.fill();
+  }
+
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 3.5;
+  ctx.shadowColor = color;
+  ctx.shadowBlur = 10;
+  ctx.beginPath();
+  points.forEach((point, index) => {
+    const py = y(point.value);
+    if (index === 0) ctx.moveTo(point.x, py);
+    else ctx.lineTo(point.x, py);
   });
   ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  const last = points[points.length - 1];
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.arc(last.x, y(last.value), 4.5, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function fitCanvas(canvas) {
+  const rect = canvas.getBoundingClientRect();
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const w = Math.max(1, Math.round((rect.width || canvas.width) * dpr));
+  const h = Math.max(1, Math.round((rect.height || canvas.height) * dpr));
+  if (canvas.width !== w || canvas.height !== h) {
+    canvas.width = w;
+    canvas.height = h;
+  }
+  const ctx = canvas.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return { ctx, w: w / dpr, h: h / dpr };
 }
 
 window.addEventListener("DOMContentLoaded", () => {
