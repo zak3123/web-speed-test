@@ -1,203 +1,162 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SpeedTest Gaming Analyzer v3.0</title>
-  <meta name="description" content="Web speed test untuk gaming, Steam, CDN dengan analisis lengkap" />
-  <link rel="stylesheet" href="speedtest.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SpeedTest Gaming Analyzer</title>
+  <link rel="stylesheet" href="speedtest.css">
 </head>
 <body>
-  <main class="app">
-    <!-- Hero Header -->
-    <header class="hero">
-      <div class="hero-content">
-        <p class="eyebrow"><i class="icon">&#9889;</i> ULTRA OPTIMIZED SPEED TEST</p>
-        <h1><span class="highlight">Gaming</span> Speed Test</h1>
-        <p class="subtitle">Analisis performa jaringan lengkap: Download, Upload, Latency, Jitter, Packet Loss, Region Game & CDN</p>
-      </div>
-      
-      <!-- Control Panel -->
-      <section class="control-panel glass-card">
-        <div class="status-line">
-          <span class="status-dot" id="statusDot"></span>
-          <strong id="statusText">Ready</strong>
-          <small class="status-time" id="statusTime">-</small>
-        </div>
-        
-        <div class="controls-grid">
-          <div class="control-group">
-            <label for="engineMode"><i class="icon">&#128274;</i> Engine</label>
-            <select id="engineMode">
-              <option value="cloudflare" selected>⚡ Cloudflare Primary</option>
-              <option value="verified">⚖️ M-Lab + Cloudflare</option>
-              <option value="ndt7">🔬 M-Lab NDT7</option>
-              <option value="local">🏠 Local Diagnostic</option>
-            </select>
-          </div>
-          
-          <div class="control-group">
-            <label for="testDuration"><i class="icon">&#9201;</i> Duration</label>
-            <select id="testDuration">
-              <option value="6">⚡ Quick (6s)</option>
-              <option value="10" selected>✅ Standard (10s)</option>
-              <option value="15">🎯 Accurate (15s)</option>
-            </select>
-          </div>
-          
-          <div class="control-group">
-            <label for="streamCount"><i class="icon">&#128269;</i> Streams</label>
-            <select id="streamCount">
-              <option value="2">🐢 Light (2)</option>
-              <option value="4">⚙️ Balanced (4)</option>
-              <option value="6">💪 Strong (6)</option>
-              <option value="8" selected>🚀 Full Power (8)</option>
-            </select>
-          </div>
-          
-          <div class="control-group">
-            <label for="uploadPayload"><i class="icon">&#8679;</i> Upload Size</label>
-            <select id="uploadPayload">
-              <option value="0">Auto</option>
-              <option value="104857600">100 MB</option>
-              <option value="268435456" selected>256 MB</option>
-              <option value="536870912">512 MB</option>
-              <option value="1073741824">1 GB Pro</option>
-            </select>
-          </div>
-        </div>
-        
-        <div class="actions">
-          <button class="btn btn-primary" id="startBtn">
-            <i class="icon">&#9658;</i> START TEST
-          </button>
-          <button class="btn btn-secondary" id="stopBtn" disabled>
-            <i class="icon">&#9201;</i> STOP
-          </button>
-        </div>
-      </section>
+  <div class="container">
+    <header class="header">
+      <h1>SpeedTest <span class="accent">Gaming</span></h1>
+      <p class="subtitle">Network performance analyzer for gaming and CDN optimization</p>
     </header>
 
-    <!-- Connection Strip -->
-    <section class="connection-strip">
-      <article class="endpoint-card client-endpoint glass-card">
-        <span class="endpoint-role"><i class="icon">&#128187;</i> Your Connection</span>
-        <strong id="heroClientIsp">Detecting...</strong>
-        <small id="heroClientIp">IP: -</small>
-        <small id="heroClientLocation">Location: -</small>
-        <em id="heroClientAsn">ASN: -</em>
-      </article>
-      
-      <div class="route-line">
-        <span></span>
-        <b><i class="icon">&#8594;</i> TESTING</b>
-        <span></span>
+    <!-- Settings Panel -->
+    <section class="panel settings-panel">
+      <div class="settings-grid">
+        <div class="setting-item">
+          <label class="setting-label">Test Engine</label>
+          <select id="engineMode">
+            <option value="cloudflare">Cloudflare Multi-Stream</option>
+            <option value="verified">M-Lab + Cloudflare (Compare)</option>
+            <option value="ndt7">M-Lab NDT7 Only</option>
+            <option value="local">Local Diagnostic</option>
+          </select>
+        </div>
+
+        <div class="setting-item">
+          <label class="setting-label">Duration</label>
+          <select id="testDuration">
+            <option value="15" selected>15 seconds (Accurate)</option>
+            <option value="10">10 seconds (Standard)</option>
+            <option value="6">6 seconds (Quick)</option>
+          </select>
+        </div>
+
+        <div class="setting-item">
+          <label class="setting-label">Parallel Streams</label>
+          <select id="streamCount">
+            <option value="8" selected>8 streams (Maximum)</option>
+            <option value="6">6 streams (Balanced)</option>
+            <option value="4">4 streams (Light)</option>
+            <option value="2">2 streams (Minimal)</option>
+          </select>
+        </div>
+
+        <div class="setting-item">
+          <label class="setting-label">Upload Payload</label>
+          <select id="uploadPayload">
+            <option value="0">Auto (Duration-based)</option>
+            <option value="104857600">100 MB</option>
+            <option value="268435456" selected>256 MB</option>
+            <option value="536870912">512 MB</option>
+            <option value="1073741824">1 GB (Full)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="action-buttons">
+        <button class="btn btn-primary" id="startBtn">Start Test</button>
+        <button class="btn btn-secondary" id="stopBtn" disabled>Stop</button>
+      </div>
+
+      <div class="status-bar">
+        <span class="status-indicator" id="statusDot"></span>
+        <span class="status-text" id="statusText">Ready</span>
+      </div>
+    </section>
+
+    <!-- Connection Info -->
+    <section class="panel connection-panel">
+      <div class="connection-info">
+        <div class="info-section client">
+          <span class="info-label">Client</span>
+          <strong id="heroClientIsp">Detecting...</strong>
+          <small id="heroClientIp">IP: -</small>
+          <small id="heroClientLocation">Location: -</small>
+        </div>
+        
+        <div class="connection-arrow">→</div>
+        
+        <div class="info-section server">
+          <span class="info-label">Server</span>
+          <strong id="heroServerName">Cloudflare Edge</strong>
+          <small id="heroServerLocation">Global CDN</small>
+          <small id="heroServerIp">IP: -</small>
+        </div>
+      </div>
+    </section>
+
+    <!-- Main Display -->
+    <section class="panel main-display">
+      <div class="gauge-container">
+        <canvas id="gaugeCanvas"></canvas>
+        <div class="gauge-value">
+          <span class="speed-value" id="mainSpeed">0.00</span>
+          <span class="speed-unit">Mbps</span>
+        </div>
+        <div class="phase-label" id="phaseLabel">Ready to start</div>
       </div>
       
-      <article class="endpoint-card server-endpoint glass-card">
-        <span class="endpoint-role"><i class="icon">&#128218;</i> Test Server</span>
-        <strong id="heroServerName">Cloudflare Edge</strong>
-        <small id="heroServerLocation">Global CDN</small>
-        <small id="heroServerIp">IP: -</small>
-        <em id="heroServerMode">Primary Engine</em>
-      </article>
+      <div class="live-graph">
+        <canvas id="chartCanvas"></canvas>
+        <span class="graph-badge" id="engineBadge">Idle</span>
+      </div>
     </section>
 
-    <!-- Main Stage -->
-    <section class="stage">
-      <!-- Gauge Card -->
-      <section class="gauge-card glass-card">
-        <div class="card-header">
-          <h2><i class="icon">&#128202;</i> Speed Meter</h2>
-          <span class="live-badge" id="liveBadge">● Live</span>
-        </div>
-        
-        <div class="gauge-container">
-          <canvas id="gaugeCanvas" width="400" height="400"></canvas>
-          <div class="gauge-value">
-            <strong id="mainSpeed">0.00</strong>
-            <span>Mbps</span>
-            <small id="phaseLabel">Ready to start</small>
-          </div>
-        </div>
-        
-        <div class="confidence-box" id="confidenceBox">
-          <strong><i class="icon">&#10003;</i> Confidence Level</strong>
-          <span id="confidenceText">Run a test to see validation metrics.</span>
-        </div>
-      </section>
-
-      <!-- Chart Card -->
-      <section class="chart-card glass-card">
-        <div class="panel-head">
-          <div>
-            <h2><i class="icon">&#128200;</i> Real-time Graph</h2>
-            <p id="chartCaption">Live throughput monitoring</p>
-          </div>
-          <span class="badge" id="engineBadge">Idle</span>
-        </div>
-        <canvas id="chartCanvas" width="900" height="350"></canvas>
-      </section>
-    </section>
-
-    <!-- Key Metrics -->
-    <section class="metrics-grid">
-      <article class="metric-card blue">
-        <i class="icon arrow-down"></i>
-        <span>Download</span>
-        <strong id="downloadSpeed">-</strong>
+    <!-- Results Grid -->
+    <div class="results-grid">
+      <article class="metric-card download">
+        <span class="metric-label">Download</span>
+        <strong class="metric-value" id="downloadSpeed">-</strong>
         <small>Mbps</small>
       </article>
-      <article class="metric-card green">
-        <i class="icon arrow-up"></i>
-        <span>Upload</span>
-        <strong id="uploadSpeed">-</strong>
+
+      <article class="metric-card upload">
+        <span class="metric-label">Upload</span>
+        <strong class="metric-value" id="uploadSpeed">-</strong>
         <small>Mbps</small>
       </article>
-      <article class="metric-card amber">
-        <i class="icon ping"></i>
-        <span>Latency</span>
-        <strong id="latencyAvg">-</strong>
+
+      <article class="metric-card latency">
+        <span class="metric-label">Latency</span>
+        <strong class="metric-value" id="latencyAvg">-</strong>
         <small>ms avg</small>
       </article>
-      <article class="metric-card purple">
-        <i class="icon jitter"></i>
-        <span>Jitter</span>
-        <strong id="jitter">-</strong>
+
+      <article class="metric-card jitter">
+        <span class="metric-label">Jitter</span>
+        <strong class="metric-value" id="jitter">-</strong>
         <small>ms</small>
       </article>
-      <article class="metric-card red">
-        <i class="icon loss"></i>
-        <span>Packet Loss</span>
-        <strong id="packetLoss">-</strong>
+
+      <article class="metric-card loss">
+        <span class="metric-label">Packet Loss</span>
+        <strong class="metric-value" id="packetLoss">-</strong>
         <small>%</small>
       </article>
-      <article class="metric-card cyan">
-        <i class="icon throughput"></i>
-        <span>Throughput</span>
-        <strong id="throughput">-</strong>
+
+      <article class="metric-card throughput">
+        <span class="metric-label">Throughput</span>
+        <strong class="metric-value" id="throughput">-</strong>
         <small>final</small>
       </article>
-    </section>
+    </div>
 
     <!-- Gaming Section -->
-    <section class="panel gaming-panel glass-card">
-      <div class="panel-head">
-        <div>
-          <h2><i class="icon">&#127918;</i> Gaming & Streaming</h2>
-          <p>Estimasi performance untuk game online, Steam download, dan streaming</p>
-        </div>
-        <span class="badge" id="gameBadge">Waiting</span>
-      </div>
+    <section class="panel gaming-panel">
+      <h2 class="panel-title">Gaming & Streaming Analysis</h2>
       
-      <div class="info-banner">
-        <i class="icon info"></i>
-        <span>Note: Speed test uses Mbps, Steam shows MB/s. 100 Mbps ≈ 12.5 MB/s real-world</span>
+      <div class="info-note">
+        Note: Speed test uses Mbps (megabit/s). Steam shows MB/s (megabyte/s).<br>
+        Example: 100 Mbps ≈ 12.5 MB/s (real-world ~10-12 MB/s with overhead)
       </div>
-      
-      <div class="game-controls">
-        <div class="control-row">
-          <label for="gameProfile"><i class="icon"></i> Select Game Profile</label>
+
+      <div class="game-settings">
+        <div class="setting-row">
+          <label for="gameProfile">Game Profile</label>
           <select id="gameProfile">
             <option value="war-thunder" selected>War Thunder</option>
             <option value="mobile-legends">Mobile Legends</option>
@@ -211,112 +170,103 @@
             <option value="custom">Custom</option>
           </select>
         </div>
-        
-        <div class="control-row">
-          <label for="gameSize"><i class="icon"></i> Game Size (GB)</label>
-          <input type="number" min="1" max="500" step="1" value="70" id="gameSize" />
+
+        <div class="setting-row">
+          <label for="gameSize">Game Size (GB)</label>
+          <input type="number" min="1" max="500" step="1" value="70" id="gameSize">
         </div>
       </div>
-      
-      <div class="game-focus">
-        <article>
-          <span>Game</span>
+
+      <div class="game-stats">
+        <div class="stat-box">
+          <span class="stat-label">Selected Game</span>
           <strong id="selectedGameName">War Thunder</strong>
           <small id="selectedGameType">Vehicle combat</small>
-        </article>
-        <article>
-          <span>Download time</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-label">Download Time</span>
           <strong id="selectedGameTime">-</strong>
           <small id="selectedGameSize">70 GB</small>
-        </article>
-        <article>
-          <span>Online Play</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-label">Online Play</span>
           <strong id="onlinePlayGrade">-</strong>
-          <small id="onlinePlayHint">Check after test</small>
-        </article>
-        <article>
-          <span>Stability</span>
+          <small id="onlinePlayHint">Run test first</small>
+        </div>
+        <div class="stat-box">
+          <span class="stat-label">Stability</span>
           <strong id="stabilityRisk">-</strong>
           <small id="stabilityHint">After test</small>
-        </article>
+        </div>
       </div>
-      
-      <div class="stats-grid">
-        <article>
-          <span>Steam Speed</span>
+
+      <div class="performance-grid">
+        <div class="perf-item">
+          <span class="perf-label">Steam Speed</span>
           <strong id="steamSpeed">-</strong>
           <small>MB/s</small>
-        </article>
-        <article>
-          <span>50 GB Game</span>
+        </div>
+        <div class="perf-item">
+          <span class="perf-label">50 GB Download</span>
           <strong id="game50">-</strong>
-          <small>est. time</small>
-        </article>
-        <article>
-          <span>100 GB Game</span>
+          <small>estimated</small>
+        </div>
+        <div class="perf-item">
+          <span class="perf-label">100 GB Download</span>
           <strong id="game100">-</strong>
-          <small>est. time</small>
-        </article>
-        <article>
-          <span>Cloud Gaming</span>
+          <small>estimated</small>
+        </div>
+        <div class="perf-item">
+          <span class="perf-label">Cloud Gaming</span>
           <strong id="cloudGaming">-</strong>
-          <small id="cloudGamingHint">Quality rating</small>
-        </article>
-        <article>
-          <span>Live Stream</span>
+          <small id="cloudGamingHint">Quality</small>
+        </div>
+        <div class="perf-item">
+          <span class="perf-label">Live Stream</span>
           <strong id="liveStream">-</strong>
           <small id="liveStreamHint">Upload quality</small>
-        </article>
+        </div>
       </div>
-      
+
       <div class="download-table">
         <table>
           <thead>
             <tr>
-              <th>Game Title</th>
+              <th>Game</th>
               <th>Size</th>
               <th>Est. Download Time</th>
             </tr>
           </thead>
           <tbody id="downloadRows">
-            <tr><td colspan="3">Run test first</td></tr>
+            <tr><td colspan="3">Run a test to see estimates</td></tr>
           </tbody>
         </table>
       </div>
     </section>
 
     <!-- Region Checker -->
-    <section class="panel region-panel glass-card">
-      <div class="panel-head">
-        <div>
-          <h2><i class="icon">&#127760;</i> Region & Route Check</h2>
-          <p>Measure latency to game servers and CDNs worldwide</p>
-        </div>
-        <button class="btn btn-secondary compact" id="regionBtn">
-          <i class="icon search"></i> CHECK REGIONS
-        </button>
-      </div>
+    <section class="panel region-panel">
+      <h2 class="panel-title">Region & Network Routing</h2>
       
-      <div class="info-banner">
-        <i class="icon info"></i>
-        <span>Proxy endpoints - approximate routes to game servers</span>
+      <div class="info-note">
+        Proxy endpoints used as route approximations. For best results: low latency (&lt;50ms), minimal jitter (&lt;10ms), zero packet loss.
       </div>
-      
+
       <div class="region-controls">
         <div>
-          <label for="regionPreset"><i class="icon"></i> Target Set</label>
+          <label for="regionPreset">Target Preset</label>
           <select id="regionPreset">
             <option value="selected" selected>Selected Game Only</option>
             <option value="warThunder">War Thunder Servers</option>
-            <option value="mobile">Mobile Games Pack</option>
-            <option value="shooters">Shooter Games</option>
-            <option value="steam">Steam/CDN Network</option>
+            <option value="mobile">Mobile Games</option>
+            <option value="shooters">Shooters</option>
+            <option value="steam">Steam/CDN</option>
             <option value="all">All Targets (87+)</option>
           </select>
         </div>
-        
+
         <div>
-          <label for="regionSamples"><i class="icon"></i> Samples per Target</label>
+          <label for="regionSamples">Samples per Target</label>
           <select id="regionSamples">
             <option value="2">2 (Fast)</option>
             <option value="4" selected>4 (Balanced)</option>
@@ -325,25 +275,27 @@
           </select>
         </div>
       </div>
-      
+
       <div class="region-summary">
-        <article>
-          <span>Best Game Route</span>
+        <div class="summary-box">
+          <span class="summary-label">Best Game Route</span>
           <strong id="bestWtRegion">-</strong>
-          <small id="bestWtHint">Check regions</small>
-        </article>
-        <article>
-          <span>Best CDN Route</span>
+          <small id="bestWtHint">Click Check Regions</small>
+        </div>
+        <div class="summary-box">
+          <span class="summary-label">Best CDN Route</span>
           <strong id="bestSteamRegion">-</strong>
-          <small id="bestSteamHint">Check regions</small>
-        </article>
-        <article>
-          <span>Overall Quality</span>
+          <small id="bestSteamHint">Click Check Regions</small>
+        </div>
+        <div class="summary-box">
+          <span class="summary-label">Overall Quality</span>
           <strong id="overallRoute">-</strong>
           <small id="overallRouteHint">After scan</small>
-        </article>
+        </div>
       </div>
-      
+
+      <button class="btn btn-secondary full-width" id="regionBtn">Check Regions</button>
+
       <div class="region-table">
         <table>
           <thead>
@@ -353,64 +305,62 @@
               <th>Latency</th>
               <th>Jitter</th>
               <th>Loss</th>
-              <th>Verdict</th>
+              <th>Rating</th>
             </tr>
           </thead>
           <tbody id="regionRows">
-            <tr><td colspan="6">Click CHECK REGIONS to start</td></tr>
+            <tr><td colspan="6">Click button above to scan regions</td></tr>
           </tbody>
         </table>
       </div>
     </section>
 
     <!-- Details Section -->
-    <section class="details">
-      <article class="panel engine-results glass-card">
-        <div class="panel-head">
-          <div>
-            <h2><i class="icon">&#128208;</i> Engine Results</h2>
-            <p>Compare results across different test engines</p>
-          </div>
-        </div>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Engine</th>
-                <th>Download</th>
-                <th>Upload</th>
-                <th>Latency</th>
-                <th>Server</th>
-              </tr>
-            </thead>
-            <tbody id="engineRows">
-              <tr><td colspan="5">Run a test to see results</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </article>
+    <div class="details-grid">
+      <div class="details-card engine-results">
+        <h2 class="panel-title">Engine Comparison</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Engine</th>
+              <th>Download</th>
+              <th>Upload</th>
+              <th>Latency</th>
+              <th>Server</th>
+            </tr>
+          </thead>
+          <tbody id="engineRows">
+            <tr><td colspan="5">Run a test to compare engines</td></tr>
+          </tbody>
+        </table>
+      </div>
 
-      <article class="panel info-details glass-card">
-        <div class="panel-head">
-          <div>
-            <h2><i class="icon">&#9881;</i> Connection Info</h2>
-            <p>Current session details</p>
-          </div>
-        </div>
+      <div class="details-card info-details">
+        <h2 class="panel-title">Connection Details</h2>
         <dl class="info-list">
-          <div><dt>Your IP</dt><dd id="clientIp">-</dd></div>
-          <div><dt>LAN Access URL</dt><dd id="lanUrl">-</dd></div>
-          <div><dt>Active Server</dt><dd id="selectedServer">-</dd></div>
-          <div><dt>Server IP</dt><dd id="serverIp">-</dd></div>
-          <div><dt>Test Mode</dt><dd id="modeLabel">-</dd></div>
+          <dt>Your IP Address</dt>
+          <dd id="clientIp">-</dd>
+          
+          <dt>LAN Access URL</dt>
+          <dd id="lanUrl">-</dd>
+          
+          <dt>Active Server</dt>
+          <dd id="selectedServer">-</dd>
+          
+          <dt>Server IP</dt>
+          <dd id="serverIp">-</dd>
+          
+          <dt>Test Mode</dt>
+          <dd id="modeLabel">-</dd>
         </dl>
-        <div class="event-log" id="eventLog">
-          <div class="log-empty">Event log will appear here</div>
-        </div>
-      </article>
-    </section>
-  </main>
 
+        <div class="event-log" id="eventLog">
+          <div class="log-placeholder">Event log will appear here</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
   <script src="ndt7.js"></script>
   <script src="speedtest.js"></script>
 </body>
