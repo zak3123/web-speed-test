@@ -1,262 +1,350 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Speed Test Demo</title>
+  <title>SpeedTest Gaming Analyzer v3.0</title>
+  <meta name="description" content="Web speed test untuk gaming, Steam, CDN dengan analisis lengkap" />
   <link rel="stylesheet" href="speedtest.css" />
 </head>
 <body>
   <main class="app">
+    <!-- Hero Header -->
     <header class="hero">
-      <div>
-        <p class="eyebrow">network performance analyzer</p>
-        <h1>Speed Test Demo</h1>
-        <p class="subtitle">Ukur download, upload, latency, jitter, region game, dan estimasi Steam/CDN dalam satu dashboard cepat.</p>
+      <div class="hero-content">
+        <p class="eyebrow"><i class="icon">&#9889;</i> ULTRA OPTIMIZED SPEED TEST</p>
+        <h1><span class="highlight">Gaming</span> Speed Test</h1>
+        <p class="subtitle">Analisis performa jaringan lengkap: Download, Upload, Latency, Jitter, Packet Loss, Region Game & CDN</p>
       </div>
-      <section class="control-panel">
+      
+      <!-- Control Panel -->
+      <section class="control-panel glass-card">
         <div class="status-line">
           <span class="status-dot" id="statusDot"></span>
           <strong id="statusText">Ready</strong>
+          <small class="status-time" id="statusTime">-</small>
         </div>
-        <label for="engineMode">Engine</label>
-        <select id="engineMode">
-          <option value="cloudflare" selected>Cloudflare multi-stream utama</option>
-          <option value="verified">Compare: M-Lab + Cloudflare</option>
-          <option value="ndt7">M-Lab NDT7 only</option>
-          <option value="local">Local server diagnostic</option>
-        </select>
-        <label for="testDuration">Durasi transfer</label>
-        <select id="testDuration">
-          <option value="15" selected>15 detik lebih akurat</option>
-          <option value="10">10 detik stabil</option>
-          <option value="6">6 detik cepat</option>
-        </select>
-        <label for="streamCount">Parallel stream</label>
-        <select id="streamCount">
-          <option value="8" selected>8 stream lebih penuh</option>
-          <option value="6">6 stream akurat</option>
-          <option value="4">4 stream stabil</option>
-          <option value="2">2 stream ringan</option>
-        </select>
-        <label for="uploadPayload">Upload payload</label>
-        <select id="uploadPayload">
-          <option value="0">Ikuti durasi test</option>
-          <option value="104857600">100 MB</option>
-          <option value="268435456" selected>256 MB stabil</option>
-          <option value="536870912">512 MB</option>
-          <option value="1073741824">1 GB upload akurat</option>
-        </select>
+        
+        <div class="controls-grid">
+          <div class="control-group">
+            <label for="engineMode"><i class="icon">&#128274;</i> Engine</label>
+            <select id="engineMode">
+              <option value="cloudflare" selected>⚡ Cloudflare Primary</option>
+              <option value="verified">⚖️ M-Lab + Cloudflare</option>
+              <option value="ndt7">🔬 M-Lab NDT7</option>
+              <option value="local">🏠 Local Diagnostic</option>
+            </select>
+          </div>
+          
+          <div class="control-group">
+            <label for="testDuration"><i class="icon">&#9201;</i> Duration</label>
+            <select id="testDuration">
+              <option value="6">⚡ Quick (6s)</option>
+              <option value="10" selected>✅ Standard (10s)</option>
+              <option value="15">🎯 Accurate (15s)</option>
+            </select>
+          </div>
+          
+          <div class="control-group">
+            <label for="streamCount"><i class="icon">&#128269;</i> Streams</label>
+            <select id="streamCount">
+              <option value="2">🐢 Light (2)</option>
+              <option value="4">⚙️ Balanced (4)</option>
+              <option value="6">💪 Strong (6)</option>
+              <option value="8" selected>🚀 Full Power (8)</option>
+            </select>
+          </div>
+          
+          <div class="control-group">
+            <label for="uploadPayload"><i class="icon">&#8679;</i> Upload Size</label>
+            <select id="uploadPayload">
+              <option value="0">Auto</option>
+              <option value="104857600">100 MB</option>
+              <option value="268435456" selected>256 MB</option>
+              <option value="536870912">512 MB</option>
+              <option value="1073741824">1 GB Pro</option>
+            </select>
+          </div>
+        </div>
+        
         <div class="actions">
-          <button class="primary" id="startBtn" type="button">GO</button>
-          <button class="secondary" id="stopBtn" type="button" disabled>Stop</button>
+          <button class="btn btn-primary" id="startBtn">
+            <i class="icon">&#9658;</i> START TEST
+          </button>
+          <button class="btn btn-secondary" id="stopBtn" disabled>
+            <i class="icon">&#9201;</i> STOP
+          </button>
         </div>
       </section>
     </header>
 
-    <section class="connection-strip" aria-label="Koneksi dan server uji">
-      <article class="endpoint-card client-endpoint">
-        <span class="endpoint-role">ISP / Client</span>
-        <strong id="heroClientIsp">Mendeteksi ISP</strong>
-        <small id="heroClientIp">-</small>
-        <small id="heroClientLocation">-</small>
-        <em id="heroClientAsn">ASN -</em>
+    <!-- Connection Strip -->
+    <section class="connection-strip">
+      <article class="endpoint-card client-endpoint glass-card">
+        <span class="endpoint-role"><i class="icon">&#128187;</i> Your Connection</span>
+        <strong id="heroClientIsp">Detecting...</strong>
+        <small id="heroClientIp">IP: -</small>
+        <small id="heroClientLocation">Location: -</small>
+        <em id="heroClientAsn">ASN: -</em>
       </article>
-      <div class="route-line" aria-hidden="true">
+      
+      <div class="route-line">
         <span></span>
-        <b>TEST ROUTE</b>
+        <b><i class="icon">&#8594;</i> TESTING</b>
         <span></span>
       </div>
-      <article class="endpoint-card server-endpoint">
-        <span class="endpoint-role">Server uji</span>
-        <strong id="heroServerName">Cloudflare speed edge</strong>
-        <small id="heroServerLocation">Global CDN / nearest edge</small>
-        <small id="heroServerIp">-</small>
-        <em id="heroServerMode">Cloudflare multi-stream utama</em>
+      
+      <article class="endpoint-card server-endpoint glass-card">
+        <span class="endpoint-role"><i class="icon">&#128218;</i> Test Server</span>
+        <strong id="heroServerName">Cloudflare Edge</strong>
+        <small id="heroServerLocation">Global CDN</small>
+        <small id="heroServerIp">IP: -</small>
+        <em id="heroServerMode">Primary Engine</em>
       </article>
     </section>
 
+    <!-- Main Stage -->
     <section class="stage">
-      <section class="gauge-card">
-        <div class="gauge">
-          <canvas id="gaugeCanvas" width="360" height="360"></canvas>
+      <!-- Gauge Card -->
+      <section class="gauge-card glass-card">
+        <div class="card-header">
+          <h2><i class="icon">&#128202;</i> Speed Meter</h2>
+          <span class="live-badge" id="liveBadge">● Live</span>
+        </div>
+        
+        <div class="gauge-container">
+          <canvas id="gaugeCanvas" width="400" height="400"></canvas>
           <div class="gauge-value">
             <strong id="mainSpeed">0.00</strong>
             <span>Mbps</span>
-            <small id="phaseLabel">Belum mulai</small>
+            <small id="phaseLabel">Ready to start</small>
           </div>
         </div>
-        <div class="confidence" id="confidenceBox">
-          <strong id="confidenceLabel">Confidence -</strong>
-          <span id="confidenceText">Jalankan test untuk melihat validasi lintas engine.</span>
+        
+        <div class="confidence-box" id="confidenceBox">
+          <strong><i class="icon">&#10003;</i> Confidence Level</strong>
+          <span id="confidenceText">Run a test to see validation metrics.</span>
         </div>
       </section>
 
-      <section class="chart-card">
+      <!-- Chart Card -->
+      <section class="chart-card glass-card">
         <div class="panel-head">
           <div>
-            <h2>Live Throughput</h2>
-            <p id="chartCaption">Grafik menampilkan sampel realtime download dan upload.</p>
+            <h2><i class="icon">&#128200;</i> Real-time Graph</h2>
+            <p id="chartCaption">Live throughput monitoring</p>
           </div>
-          <span id="engineBadge">Idle</span>
+          <span class="badge" id="engineBadge">Idle</span>
         </div>
-        <canvas id="chartCanvas" width="900" height="300"></canvas>
+        <canvas id="chartCanvas" width="900" height="350"></canvas>
       </section>
     </section>
 
-    <section class="metrics">
-      <article><span>Download</span><strong id="downloadSpeed">-</strong><small>Mbps</small></article>
-      <article><span>Upload</span><strong id="uploadSpeed">-</strong><small>Mbps</small></article>
-      <article><span>Latency</span><strong id="latencyAvg">-</strong><small>ms avg</small></article>
-      <article><span>Jitter</span><strong id="jitter">-</strong><small>ms</small></article>
-      <article><span>Packet Loss</span><strong id="packetLoss">-</strong><small>% / n/a</small></article>
-      <article><span>Throughput</span><strong id="throughput">-</strong><small>final download</small></article>
+    <!-- Key Metrics -->
+    <section class="metrics-grid">
+      <article class="metric-card blue">
+        <i class="icon arrow-down"></i>
+        <span>Download</span>
+        <strong id="downloadSpeed">-</strong>
+        <small>Mbps</small>
+      </article>
+      <article class="metric-card green">
+        <i class="icon arrow-up"></i>
+        <span>Upload</span>
+        <strong id="uploadSpeed">-</strong>
+        <small>Mbps</small>
+      </article>
+      <article class="metric-card amber">
+        <i class="icon ping"></i>
+        <span>Latency</span>
+        <strong id="latencyAvg">-</strong>
+        <small>ms avg</small>
+      </article>
+      <article class="metric-card purple">
+        <i class="icon jitter"></i>
+        <span>Jitter</span>
+        <strong id="jitter">-</strong>
+        <small>ms</small>
+      </article>
+      <article class="metric-card red">
+        <i class="icon loss"></i>
+        <span>Packet Loss</span>
+        <strong id="packetLoss">-</strong>
+        <small>%</small>
+      </article>
+      <article class="metric-card cyan">
+        <i class="icon throughput"></i>
+        <span>Throughput</span>
+        <strong id="throughput">-</strong>
+        <small>final</small>
+      </article>
     </section>
 
-    <section class="panel gaming-panel">
+    <!-- Gaming Section -->
+    <section class="panel gaming-panel glass-card">
       <div class="panel-head">
         <div>
-          <h2>Gaming, Steam & Streaming</h2>
-          <p>Estimasi dari hasil final test.</p>
+          <h2><i class="icon">&#127918;</i> Gaming & Streaming</h2>
+          <p>Estimasi performance untuk game online, Steam download, dan streaming</p>
         </div>
-        <span id="gameBadge">Waiting</span>
+        <span class="badge" id="gameBadge">Waiting</span>
       </div>
-      <p class="conversion-note">Catatan: speedtest memakai Mbps, Steam biasanya MB/s. 100 Mbps kira-kira 12.5 MB/s sebelum overhead, praktiknya sekitar 10-12 MB/s jika server Steam dan disk stabil.</p>
+      
+      <div class="info-banner">
+        <i class="icon info"></i>
+        <span>Note: Speed test uses Mbps, Steam shows MB/s. 100 Mbps ≈ 12.5 MB/s real-world</span>
+      </div>
+      
       <div class="game-controls">
-        <label for="gameProfile">Game profile</label>
-        <select id="gameProfile">
-          <option value="war-thunder" selected>War Thunder</option>
-          <option value="mobile-legends">Mobile Legends</option>
-          <option value="project-sekai">Project Sekai</option>
-          <option value="arena-breakout-mobile">Arena Breakout Mobile</option>
-          <option value="arena-breakout-infinite">Arena Breakout Infinite</option>
-          <option value="call-of-duty-mobile">Call of Duty Mobile</option>
-          <option value="call-of-duty-warzone">Call of Duty / Warzone</option>
-          <option value="delta-force">Delta Force</option>
-          <option value="pubg-pc">PUBG PC</option>
-          <option value="pubg-mobile">PUBG Mobile</option>
-          <option value="counter-strike-2">Counter-Strike 2</option>
-          <option value="dota-2">Dota 2</option>
-          <option value="apex-legends">Apex Legends</option>
-          <option value="gta-v">GTA V</option>
-          <option value="forza-horizon-5">Forza Horizon 5</option>
-          <option value="cyberpunk-2077">Cyberpunk 2077</option>
-          <option value="custom">Custom game</option>
-        </select>
-        <label for="gameSize">Ukuran game / update</label>
-        <input id="gameSize" type="number" min="1" max="500" step="1" value="70" />
+        <div class="control-row">
+          <label for="gameProfile"><i class="icon"></i> Select Game Profile</label>
+          <select id="gameProfile">
+            <option value="war-thunder" selected>War Thunder</option>
+            <option value="mobile-legends">Mobile Legends</option>
+            <option value="project-sekai">Project Sekai</option>
+            <option value="arena-breakout-mobile">Arena Breakout Mobile</option>
+            <option value="call-of-duty-warzone">Call of Duty Warzone</option>
+            <option value="pubg-pc">PUBG PC</option>
+            <option value="counter-strike-2">Counter-Strike 2</option>
+            <option value="dota-2">Dota 2</option>
+            <option value="apex-legends">Apex Legends</option>
+            <option value="custom">Custom</option>
+          </select>
+        </div>
+        
+        <div class="control-row">
+          <label for="gameSize"><i class="icon"></i> Game Size (GB)</label>
+          <input type="number" min="1" max="500" step="1" value="70" id="gameSize" />
+        </div>
       </div>
+      
       <div class="game-focus">
         <article>
-          <span>Selected game</span>
+          <span>Game</span>
           <strong id="selectedGameName">War Thunder</strong>
-          <small id="selectedGameType">online vehicle combat</small>
+          <small id="selectedGameType">Vehicle combat</small>
         </article>
         <article>
-          <span>Download selected</span>
+          <span>Download time</span>
           <strong id="selectedGameTime">-</strong>
-          <small id="selectedGameSize">70 GB editable</small>
+          <small id="selectedGameSize">70 GB</small>
         </article>
         <article>
-          <span>Online play</span>
+          <span>Online Play</span>
           <strong id="onlinePlayGrade">-</strong>
-          <small id="onlinePlayHint">latency + jitter + loss</small>
+          <small id="onlinePlayHint">Check after test</small>
         </article>
         <article>
-          <span>Stability risk</span>
+          <span>Stability</span>
           <strong id="stabilityRisk">-</strong>
-          <small id="stabilityHint">packet loss / jitter</small>
+          <small id="stabilityHint">After test</small>
         </article>
       </div>
-      <div class="game-grid">
+      
+      <div class="stats-grid">
         <article>
-          <span>Steam speed</span>
+          <span>Steam Speed</span>
           <strong id="steamSpeed">-</strong>
           <small>MB/s</small>
         </article>
         <article>
-          <span>Game 50 GB</span>
+          <span>50 GB Game</span>
           <strong id="game50">-</strong>
-          <small>estimasi download</small>
+          <small>est. time</small>
         </article>
         <article>
-          <span>Game 100 GB</span>
+          <span>100 GB Game</span>
           <strong id="game100">-</strong>
-          <small>estimasi download</small>
+          <small>est. time</small>
         </article>
         <article>
-          <span>Cloud gaming</span>
+          <span>Cloud Gaming</span>
           <strong id="cloudGaming">-</strong>
-          <small id="cloudGamingHint">latency + jitter</small>
+          <small id="cloudGamingHint">Quality rating</small>
         </article>
         <article>
-          <span>Live stream</span>
+          <span>Live Stream</span>
           <strong id="liveStream">-</strong>
-          <small id="liveStreamHint">upload quality</small>
+          <small id="liveStreamHint">Upload quality</small>
         </article>
       </div>
-      <div class="download-times">
+      
+      <div class="download-table">
         <table>
           <thead>
             <tr>
-              <th>Steam game</th>
-              <th>Est. size</th>
-              <th>Estimated time</th>
+              <th>Game Title</th>
+              <th>Size</th>
+              <th>Est. Download Time</th>
             </tr>
           </thead>
           <tbody id="downloadRows">
-            <tr><td colspan="3">Belum ada hasil.</td></tr>
+            <tr><td colspan="3">Run test first</td></tr>
           </tbody>
         </table>
       </div>
     </section>
 
-    <section class="panel region-panel">
+    <!-- Region Checker -->
+    <section class="panel region-panel glass-card">
       <div class="panel-head">
         <div>
-          <h2>Server Region & Game Route</h2>
-          <p>Cek perkiraan rute ke region game online, mobile, shooter, dan Steam/CDN.</p>
+          <h2><i class="icon">&#127760;</i> Region & Route Check</h2>
+          <p>Measure latency to game servers and CDNs worldwide</p>
         </div>
-        <button class="secondary compact" id="regionBtn" type="button">Check Regions</button>
+        <button class="btn btn-secondary compact" id="regionBtn">
+          <i class="icon search"></i> CHECK REGIONS
+        </button>
       </div>
-      <p class="conversion-note">Catatan: ini bukan IP server resmi Gaijin/Steam. Ini mengukur endpoint publik per region sebagai aproksimasi rute. Hasil terbaik untuk main game biasanya latency rendah, jitter kecil, packet loss 0%.</p>
+      
+      <div class="info-banner">
+        <i class="icon info"></i>
+        <span>Proxy endpoints - approximate routes to game servers</span>
+      </div>
+      
       <div class="region-controls">
-        <label for="regionPreset">Target check</label>
-        <select id="regionPreset">
-          <option value="selected" selected>Game terpilih saja</option>
-          <option value="warThunder">War Thunder only</option>
-          <option value="mobile">Mobile games pack</option>
-          <option value="shooters">Shooter pack</option>
-          <option value="steam">Steam/CDN only</option>
-          <option value="all">All targets</option>
-        </select>
-        <label for="regionSamples">Region samples</label>
-        <select id="regionSamples">
-          <option value="4" selected>4 samples stabil</option>
-          <option value="6">6 samples lebih tepat</option>
-          <option value="8">8 samples akurat</option>
-          <option value="10">10 samples paling teliti</option>
-          <option value="2">2 samples cepat</option>
-        </select>
+        <div>
+          <label for="regionPreset"><i class="icon"></i> Target Set</label>
+          <select id="regionPreset">
+            <option value="selected" selected>Selected Game Only</option>
+            <option value="warThunder">War Thunder Servers</option>
+            <option value="mobile">Mobile Games Pack</option>
+            <option value="shooters">Shooter Games</option>
+            <option value="steam">Steam/CDN Network</option>
+            <option value="all">All Targets (87+)</option>
+          </select>
+        </div>
+        
+        <div>
+          <label for="regionSamples"><i class="icon"></i> Samples per Target</label>
+          <select id="regionSamples">
+            <option value="2">2 (Fast)</option>
+            <option value="4" selected>4 (Balanced)</option>
+            <option value="6">6 (Accurate)</option>
+            <option value="8">8 (Precise)</option>
+          </select>
+        </div>
       </div>
+      
       <div class="region-summary">
         <article>
-          <span>Best game route</span>
+          <span>Best Game Route</span>
           <strong id="bestWtRegion">-</strong>
-          <small id="bestWtHint">cek region dulu</small>
+          <small id="bestWtHint">Check regions</small>
         </article>
         <article>
-          <span>Best CDN route</span>
+          <span>Best CDN Route</span>
           <strong id="bestSteamRegion">-</strong>
-          <small id="bestSteamHint">cek region dulu</small>
+          <small id="bestSteamHint">Check regions</small>
         </article>
         <article>
-          <span>Overall route</span>
+          <span>Overall Quality</span>
           <strong id="overallRoute">-</strong>
-          <small id="overallRouteHint">latency / jitter / loss</small>
+          <small id="overallRouteHint">After scan</small>
         </article>
       </div>
-      <div class="region-table table-wrap">
+      
+      <div class="region-table">
         <table>
           <thead>
             <tr>
@@ -269,18 +357,19 @@
             </tr>
           </thead>
           <tbody id="regionRows">
-            <tr><td colspan="6">Klik Check Regions untuk cek EU / CIS / SA / US dan CDN lain.</td></tr>
+            <tr><td colspan="6">Click CHECK REGIONS to start</td></tr>
           </tbody>
         </table>
       </div>
     </section>
 
+    <!-- Details Section -->
     <section class="details">
-      <article class="panel">
+      <article class="panel engine-results glass-card">
         <div class="panel-head">
           <div>
-            <h2>Engine Results</h2>
-            <p>Hasil per jalur test. Perbedaan besar berarti routing ISP ke server berbeda.</p>
+            <h2><i class="icon">&#128208;</i> Engine Results</h2>
+            <p>Compare results across different test engines</p>
           </div>
         </div>
         <div class="table-wrap">
@@ -295,27 +384,29 @@
               </tr>
             </thead>
             <tbody id="engineRows">
-              <tr><td colspan="5">Belum ada hasil.</td></tr>
+              <tr><td colspan="5">Run a test to see results</td></tr>
             </tbody>
           </table>
         </div>
       </article>
 
-      <article class="panel">
+      <article class="panel info-details glass-card">
         <div class="panel-head">
           <div>
-            <h2>Connection Info</h2>
-            <p>Client, server, dan event test.</p>
+            <h2><i class="icon">&#9881;</i> Connection Info</h2>
+            <p>Current session details</p>
           </div>
         </div>
         <dl class="info-list">
-          <div><dt>Client IP</dt><dd id="clientIp">-</dd></div>
-          <div><dt>Access URL</dt><dd id="lanUrl">-</dd></div>
-          <div><dt>Selected server</dt><dd id="selectedServer">-</dd></div>
+          <div><dt>Your IP</dt><dd id="clientIp">-</dd></div>
+          <div><dt>LAN Access URL</dt><dd id="lanUrl">-</dd></div>
+          <div><dt>Active Server</dt><dd id="selectedServer">-</dd></div>
           <div><dt>Server IP</dt><dd id="serverIp">-</dd></div>
-          <div><dt>Mode</dt><dd id="modeLabel">Cloudflare multi-stream utama</dd></div>
+          <div><dt>Test Mode</dt><dd id="modeLabel">-</dd></div>
         </dl>
-        <div class="log" id="eventLog"></div>
+        <div class="event-log" id="eventLog">
+          <div class="log-empty">Event log will appear here</div>
+        </div>
       </article>
     </section>
   </main>
