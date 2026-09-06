@@ -577,6 +577,7 @@ async function publicTrace() {
     if (body?.trace?.ip) return body.trace;
   } catch {}
 
+  // Fallback to Cloudflare trace API
   try {
     const { response } = await timedFetch(`${CF_BASE}/cdn-cgi/trace?t=${Date.now()}`, {}, 5000);
     const text = await response.text();

@@ -11,13 +11,13 @@ const ROOT = __dirname;
 const PORT = Number(process.env.PORT || 9090);
 const HOST = process.env.HOST || "0.0.0.0";
 const PUBLIC_MODE = process.env.SPEEDTEST_PUBLIC === "1";
-const MAX_DOWNLOAD_BYTES = 512 * 1024 * 1024;
-const MAX_UPLOAD_BYTES = 1024 * 1024 * 1024;
-const MAX_URL_LENGTH = 2048;
-const MAX_CONCURRENT_UPLOAD_STREAMS = Math.max(1, Math.min(24, Number(process.env.SPEEDTEST_MAX_UPLOAD_STREAMS) || 12));
-const INTERNET_UPLOAD_TARGET = "https://speed.cloudflare.com/__up";
+const MAX_DOWNLOAD_BYTES = 512 * 1024 * 1024; // 512MB max download chunk
+const MAX_UPLOAD_BYTES = 1024 * 1024 * 1024; // 1GB max upload
+const MAX_URL_LENGTH = 2048; // URL length limit
+const MAX_CONCURRENT_UPLOAD_STREAMS = Math.max(1, Math.min(24, Number(process.env.SPEEDTEST_MAX_UPLOAD_STREAMS) || 12)); // Configurable streams
+const INTERNET_UPLOAD_TARGET = "https://speed.cloudflare.com/__up"; // Cloudflare upload endpoint
 const CLOUDFLARE_TRACE = "https://speed.cloudflare.com/cdn-cgi/trace";
-const IP_PROFILE_API = "https://ipwho.is";
+const IP_PROFILE_API = "https://ipwho.is"; // Public IP/ISP info API
 const rateBuckets = new Map();
 const activeUploadStreams = new Map();
 const profileCache = new Map();
@@ -803,10 +803,10 @@ async function fetchClientProfile(ip) {
     location: "-",
     source: "request"
   };
-  if (!ip || isPrivateIp(ip)) return fallback;
+  if (!ip || isPrivateIp(ip)) return fallback; // Fast path for private IPs
 
   const cached = profileCache.get(ip);
-  if (cached && cached.expiresAt > Date.now()) return cached.value;
+  if (cached && cached.expiresAt > Date.now()) return cached.value; // Use cache
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 2500);
@@ -958,16 +958,17 @@ function avg(values) {
 }
 
 async function probeTarget(target, samples) {
-  const hostResults = [];
-  for (const host of target.hosts) {
+  const hostPromises = target.hosts.map(async (host) => {
     const rows = [];
-    for (let i = 0; i < samples; i += 1) {
+    for (let i = 0; i < samples; i++) {
       rows.push(await tcpProbe(host, 443));
       await new Promise((resolve) => setTimeout(resolve, 60));
     }
+    
     const ok = rows.filter((row) => row.ok).map((row) => row.elapsedMs);
     const diffs = ok.slice(1).map((value, index) => Math.abs(value - ok[index]));
-    hostResults.push({
+    
+    return {
       host,
       ok: ok.length,
       samples: rows.length,
@@ -976,8 +977,10 @@ async function probeTarget(target, samples) {
       jitterMs: avg(diffs),
       loss: rows.length ? ((rows.length - ok.length) / rows.length) * 100 : null,
       errors: rows.filter((row) => !row.ok).map((row) => row.error).filter(Boolean)
-    });
-  }
+    };
+  });
+  
+  const hostResults = await Promise.all(hostPromises);
 
   const usable = hostResults.filter((row) => Number.isFinite(row.avgMs));
   const best = usable.sort((a, b) => a.avgMs - b.avgMs)[0] || null;
@@ -1010,22 +1013,26 @@ async function mapLimit(items, limit, worker) {
 
 async function handleRegionProbe(req, res, url) {
   if (!rateLimit(req, "region-probe", 20, 60 * 1000)) {
-    return sendJson(res, 429, { ok: false, error: "Terlalu banyak request region probe dari IP ini" });
+    return sendJson(res, 429, { ok: false, error: "Rate limit exceeded" });
   }
+  
   const ids = String(url.searchParams.get("ids") || "")
     .split(",")
     .map((item) => item.trim())
     .filter(Boolean);
   const samples = Math.max(2, Math.min(10, Number(url.searchParams.get("samples")) || 4));
+  
+  // Filter targets by ID or use all
   const selected = ids.length
     ? REGION_TARGETS.filter((target) => ids.includes(target.id))
     : REGION_TARGETS;
 
   if (!selected.length) {
-    return sendJson(res, 400, { ok: false, error: "Target region tidak valid", targets: REGION_TARGETS.map(targetPublicInfo) });
+    return sendJson(res, 400, { ok: false, error: "Invalid target" });
   }
 
   try {
+    // Parallel probe with concurrency limit (8 at a time for speed)
     const results = await mapLimit(selected, 8, (target) => probeTarget(target, samples));
     return sendJson(res, 200, { ok: true, samples, results });
   } catch (error) {

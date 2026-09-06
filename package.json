@@ -1,6 +1,7 @@
 {
   "name": "speedtest-gaming-analyzer",
-  "version": "1.0.0",
+  "version": "2.0.0-optimized",
+  "description": "Web speed test untuk estimasi download/upload, latency, jitter, packet loss, region game, dan Steam/CDN",
   "private": true,
   "scripts": {
     "start": "node speedtest-server.js",
@@ -8,5 +9,8 @@
   },
   "dependencies": {
     "@m-lab/ndt7": "^0.1.4"
+  },
+  "engines": {
+    "node": ">=16.0.0"
   }
 }
